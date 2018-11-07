@@ -5,7 +5,7 @@
 //  Created by Laurin Brandner on 23.10.18.
 //
 
-public struct AtomicIterator<Element> : IteratorProtocol {
+public struct AtomicIterator<Element>: IteratorProtocol {
     
     private var node: Node<Element>?
     

@@ -23,22 +23,23 @@ final class Node<Element> {
     
     private var spinlock = OS_SPINLOCK_INIT
     
-    init(element e: Element?) {
+    init() {
         ID = IDCounter.increment()
-        element = e
     }
     
     func lock() {
+        print("lock \(ID)")
         OSSpinLockLock(&spinlock)
     }
     
     func unlock() {
+        print("unlock \(ID)")
         OSSpinLockUnlock(&spinlock)
     }
     
 }
 
-extension Node : Equatable {
+extension Node: Equatable {
     
     static func == (lhs: Node<Element>, rhs: Node<Element>) -> Bool {
         return lhs.ID == rhs.ID
@@ -46,10 +47,33 @@ extension Node : Equatable {
     
 }
 
-extension Node : Hashable {
+extension Node: Hashable {
     
     var hashValue: Int {
         return Int(ID)
     }
     
+}
+
+func order<E>(_ lhs: Node<E>, _ rhs: Node<E>?) -> (first: Node<E>, second: Node<E>?) {
+    guard let rhs = rhs else {
+        return (lhs, nil)
+    }
+    
+    if lhs.ID < rhs.ID {
+        return (lhs, rhs)
+    }
+    return (rhs, lhs)
+}
+
+func lock<E>(_ lhs: Node<E>, _ rhs: Node<E>?, during transaction: (Node<E>, Node<E>?) -> ()) {
+    let (first, second) = order(lhs, rhs)
+    
+    first.lock()
+    second?.lock()
+    
+    transaction(lhs, rhs)
+    
+    first.unlock()
+    second?.unlock()
 }

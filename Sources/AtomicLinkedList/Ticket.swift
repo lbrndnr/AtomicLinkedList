@@ -29,7 +29,7 @@ public class Ticket {
     
 }
 
-extension Ticket : Equatable {
+extension Ticket: Equatable {
     
     public static func == (lhs: Ticket, rhs: Ticket) -> Bool {
         return lhs.ID == rhs.ID

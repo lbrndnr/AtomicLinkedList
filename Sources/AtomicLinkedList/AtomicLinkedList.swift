@@ -7,9 +7,9 @@
 
 public final class AtomicLinkedList<Element> {
     
-//    private let pool = AtomicStack<Node<Element>>()
+    private let pool = AtomicStack<Element>()
     
-    private let head = Node<Element>(element: nil)
+    private let head = Node<Element>()
     private var tail: Node<Element>
     
     public var isEmpty: Bool {
@@ -20,31 +20,6 @@ public final class AtomicLinkedList<Element> {
     
     public init() {
         tail = head
-    }
-    
-    // MARK: - Lock
-    
-    private func order(_ lhs: Node<Element>, _ rhs: Node<Element>?) -> (first: Node<Element>, second: Node<Element>?) {
-        guard let rhs = rhs else {
-            return (lhs, nil)
-        }
-        
-        if lhs.ID < rhs.ID {
-            return (lhs, rhs)
-        }
-        return (rhs, lhs)
-    }
-    
-    private func lock(_ lhs: Node<Element>, _ rhs: Node<Element>?, during transaction: (Node<Element>, Node<Element>?) -> ()) {
-        let (first, second) = order(lhs, rhs)
-        
-        first.lock()
-        second?.lock()
-        
-        transaction(lhs, rhs)
-        
-        first.unlock()
-        second?.unlock()
     }
     
     // MARK: - Insertion
@@ -71,7 +46,8 @@ public final class AtomicLinkedList<Element> {
 //    }
     
     private func insert(_ newElement: Element, previous: Node<Element>, next: Node<Element>?) -> Node<Element> {
-        let node = Node(element: newElement)
+        let node = pool.pop() ?? Node()
+        node.element = newElement
         
         lock(previous, next) { p, n in
             p.next = node
@@ -88,9 +64,9 @@ public final class AtomicLinkedList<Element> {
     private func remove(_ node: Node<Element>) {
         if node == tail {
             lock(node.previous!, node) { p, t in
-                tail = p
                 p.next = nil
                 t?.previous = nil
+                tail = p
             }
         }
         else {
@@ -100,7 +76,20 @@ public final class AtomicLinkedList<Element> {
                     n?.previous = p
                 }
             }
+            else {
+                assert(false)
+            }
         }
+        
+        pool.push(node)
+    }
+    
+    public func dropFirst() {
+        guard let node = head.next else {
+            return
+        }
+        
+        remove(node)
     }
     
     public func remove(_ ticket: Ticket) {
@@ -123,7 +112,7 @@ public final class AtomicLinkedList<Element> {
     
 }
 
-extension AtomicLinkedList : Sequence {
+extension AtomicLinkedList: Sequence {
     
     public func makeIterator() -> AtomicIterator<Element> {
         return AtomicIterator(head: head)
@@ -131,7 +120,7 @@ extension AtomicLinkedList : Sequence {
     
 }
 
-extension AtomicLinkedList where Element : Equatable {
+extension AtomicLinkedList where Element: Equatable {
     
     public func remove(_ element: Element) {
         var node = head

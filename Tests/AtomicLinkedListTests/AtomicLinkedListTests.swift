@@ -89,7 +89,7 @@ final class AtomicLinkedListTests: XCTestCase {
             let queue = OperationQueue()
             queue.maxConcurrentOperationCount = 100
             
-            let range = (0..<1000)
+            let range = (0..<10000)
             let addOperations = range.map { i in BlockOperation { self.list.append(i) } }
             let removeOperations = range.map { _ in BlockOperation { self.list.dropFirst() } }
             let operations = addOperations + removeOperations

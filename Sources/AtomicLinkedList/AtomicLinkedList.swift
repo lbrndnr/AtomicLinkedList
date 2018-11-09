@@ -46,14 +46,16 @@ public final class AtomicLinkedList<Element> {
 //    }
     
     private func insert(_ newElement: Element, previous: Node<Element>, next: Node<Element>?) -> Node<Element> {
-        let node = pool.pop() ?? Node()
-        node.element = newElement
+        let node = Node(element: newElement, previous: previous)
+        node.next = next
         
         lock(previous, next) { p, n in
-            p.next = node
-            node.previous = p
-            node.next = n
             n?.previous = node
+            previous.next = node
+            
+            if p == tail {
+                tail = node
+            }
         }
         
         return node
@@ -62,26 +64,14 @@ public final class AtomicLinkedList<Element> {
     // MARK: - Removal
     
     private func remove(_ node: Node<Element>) {
-        if node == tail {
-            lock(node.previous!, node) { p, t in
-                p.next = nil
-                t?.previous = nil
+        lock(node.previous, node) { p, n in
+            p.next = n?.next
+            p.next?.previous = p
+            
+            if tail == n {
                 tail = p
             }
         }
-        else {
-            if let previous = node.previous, let next = node.next {
-                lock(previous, next) { p, n in
-                    p.next = n
-                    n?.previous = p
-                }
-            }
-            else {
-                assert(false)
-            }
-        }
-        
-        pool.push(node)
     }
     
     public func dropFirst() {

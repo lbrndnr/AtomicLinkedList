@@ -31,70 +31,18 @@ class ConcurrentTests: XCTestCase {
     
     // MARK: - Tests
     
-    func testEmptiness() {
-        XCTAssertTrue(list.isEmpty)
+    func testThreadSafety() {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 100
         
-        list.append(0)
+        let range = (0..<10000)
+        let addOperations = range.map { i in BlockOperation { self.list.append(i) } }
+        let removeOperations = range.map { i in BlockOperation { self.list.remove(i) } }
+        let operations = (addOperations + removeOperations).shuffled()
         
-        XCTAssertFalse(list.isEmpty)
-    }
-    
-    func testInsertion() {
-        let insertions: [Int] = Array(0 ..< 10)
+        queue.addOperations(operations, waitUntilFinished: true)
         
-        for i in insertions {
-            list.append(i)
-        }
-        
-        var actualInsertions = [Int]()
-        for i in list {
-            actualInsertions.append(i)
-        }
-        
-        XCTAssertEqual(insertions, actualInsertions)
-    }
-    
-    func testRemoval() {
-        for i in 0..<10 {
-            list.append(i)
-        }
-        
-        list.remove(5)
-        XCTAssertEqual(count(), 9)
-        
-        list.remove(0)
-        XCTAssertEqual(count(), 8)
-        
-        list.remove(9)
-        XCTAssertEqual(count(), 7)
-        
-        list.removeAll()
-        XCTAssertTrue(list.isEmpty)
-    }
-    
-    func testTicket() {
-        var tickets = [Ticket]()
-        for i in 0..<10 {
-            let t = list.append(i)
-            tickets.append(t)
-        }
-        XCTAssertFalse(list.isEmpty)
-        
-        tickets.shuffle()
-        
-        for (idx, t) in tickets.enumerated() {
-            list.remove(t)
-            XCTAssertEqual(count(), tickets.count-idx-1)
-        }
-        
-        tickets.shuffle()
-        
-        for t in tickets {
-            list.remove(t)
-            XCTAssertEqual(count(), 0)
-        }
-        
-        XCTAssertTrue(list.isEmpty)
+        XCTAssertEqual(count(), 0)
     }
     
 }

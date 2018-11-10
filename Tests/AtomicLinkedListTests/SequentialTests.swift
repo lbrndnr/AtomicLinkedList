@@ -1,3 +1,10 @@
+//
+//  SequentialTests.swift
+//  AtomicLinkedListTests
+//
+//  Created by Laurin Brandner on 23.10.18.
+//
+
 import XCTest
 @testable import AtomicLinkedList
 
@@ -76,55 +83,18 @@ final class AtomicLinkedListTests: XCTestCase {
         tickets.shuffle()
         
         for (idx, t) in tickets.enumerated() {
-            for _ in 0..<2 {
-                list.remove(t)
-                XCTAssertEqual(count(), tickets.count - idx - 1)
-            }
+            list.remove(t)
+            XCTAssertEqual(count(), tickets.count-idx-1)
         }
+        
+        tickets.shuffle()
+        
+        for t in tickets {
+            list.remove(t)
+            XCTAssertEqual(count(), 0)
+        }
+        
         XCTAssertTrue(list.isEmpty)
-    }
-    
-    func testPerformance() {
-        measure {
-            let queue = OperationQueue()
-            queue.maxConcurrentOperationCount = 100
-            
-            let range = (0..<10000)
-            let addOperations = range.map { i in BlockOperation { self.list.append(i) } }
-            let removeOperations = range.map { _ in BlockOperation { self.list.dropFirst() } }
-            let operations = addOperations + removeOperations
-            
-            queue.addOperations(operations, waitUntilFinished: true)
-        }
-    }
-    
-    func testDispatchPerformance() {
-        let syncQueue = DispatchQueue(label: "sync")
-        var array = [Int]()
-        
-        let append: (Int) -> () = { i in
-            syncQueue.sync {
-                array.append(i)
-            }
-        }
-        
-        let remove: (Int) -> () = { i in
-            syncQueue.sync {
-                array.dropFirst()
-            }
-        }
-        
-        measure {
-            let queue = OperationQueue()
-            queue.maxConcurrentOperationCount = 100
-            
-            let range = (0..<10000)
-            let addOperations = range.map { i in BlockOperation { append(i) } }
-            let removeOperations = range.map { i in BlockOperation { remove(i) } }
-            let operations = addOperations + removeOperations
-            
-            queue.addOperations(operations, waitUntilFinished: true)
-        }
     }
     
 }

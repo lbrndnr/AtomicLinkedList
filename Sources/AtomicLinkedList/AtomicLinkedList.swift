@@ -46,7 +46,8 @@ public final class AtomicLinkedList<Element> {
 //    }
     
     private func insert(_ newElement: Element, previous: Node<Element>, next: Node<Element>?) -> Node<Element> {
-        let node = Node(element: newElement, previous: previous)
+        let node = Node(element: newElement)
+        node.previous = previous
         node.next = next
         
         lock(previous, next) { p, n in
@@ -64,22 +65,32 @@ public final class AtomicLinkedList<Element> {
     // MARK: - Removal
     
     private func remove(_ node: Node<Element>) {
-        lock(node.previous, node) { p, n in
-            p.next = n?.next
-            p.next?.previous = p
+        guard let previous = node.previous else {
+            return
+        }
+        
+        lock(previous, node.next) { p, n in
+            p.next = n
+            n?.previous = p
+        
+            node.previous = nil
+            node.next = nil
             
-            if tail == n {
+            if tail == node {
                 tail = p
             }
         }
     }
     
-    public func dropFirst() {
+    public func dropFirst() -> Element? {
         guard let node = head.next else {
-            return
+            return nil
         }
         
+        let element = node.element
         remove(node)
+        
+        return element
     }
     
     public func remove(_ ticket: Ticket) {

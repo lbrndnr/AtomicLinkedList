@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Ticket {
+public final class Ticket {
     
     typealias Block = () -> ()
     
@@ -31,7 +31,7 @@ public class Ticket {
 
 extension Ticket: Equatable {
     
-    public static func == (lhs: Ticket, rhs: Ticket) -> Bool {
+    public static func ==(lhs: Ticket, rhs: Ticket) -> Bool {
         return lhs.ID == rhs.ID
     }
     

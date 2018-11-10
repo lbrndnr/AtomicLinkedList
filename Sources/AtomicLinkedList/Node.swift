@@ -18,7 +18,7 @@ final class Node<Element> {
     
     var element: Element?
     
-    var previous: Node<Element>!
+    var previous: Node<Element>?
     var next: Node<Element>?
     
     private var spinlock = OS_SPINLOCK_INIT
@@ -27,10 +27,8 @@ final class Node<Element> {
         ID = IDCounter.increment()
     }
     
-    convenience init(element e: Element?, previous p: Node<Element>) {
+    convenience init(element e: Element?) {
         self.init()
-        
-        previous = p
         element = e
     }
     

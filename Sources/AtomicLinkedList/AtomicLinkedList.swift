@@ -7,25 +7,34 @@
 
 public final class AtomicLinkedList<Element> {
     
-    private let pool = AtomicStack<Element>()
+//    private let pool = AtomicStack<Element>()
     
-    private let head = Node<Element>()
-    private var tail: Node<Element>
+    private let head = Node<Element>(element: nil)
+    private let tail = Node<Element>(element: nil)
     
     public var isEmpty: Bool {
-        return (head == tail)
+        return (head.next === tail)
     }
     
     // MARK: - Initialization
     
     public init() {
-        tail = head
+        head.next = tail
+        tail.previous = head
     }
     
     // MARK: - Insertion
     
     @discardableResult public func append(_ newElement: Element) -> Ticket {
-        let node = insert(newElement, previous: tail, next: tail.next)
+        let node = Node(element: newElement)
+        
+        lock(tail.previous!, tail) { p, n in
+            node.previous = p
+            node.next = n
+            
+            n.previous = node
+            p.next = node
+        }
         
         let ticket = Ticket {
             weak var weakSelf = self
@@ -41,44 +50,15 @@ public final class AtomicLinkedList<Element> {
         return ticket
     }
     
-//    public func insert(_ newElement: Element, at i: Int) {
-//
-//    }
-    
-    private func insert(_ newElement: Element, previous: Node<Element>, next: Node<Element>?) -> Node<Element> {
-        let node = Node(element: newElement)
-        node.previous = previous
-        node.next = next
-        
-        lock(previous, next) { p, n in
-            n?.previous = node
-            previous.next = node
-            
-            if p == tail {
-                tail = node
-            }
-        }
-        
-        return node
-    }
-    
     // MARK: - Removal
     
     private func remove(_ node: Node<Element>) {
-        guard let previous = node.previous else {
-            return
-        }
-        
-        lock(previous, node.next) { p, n in
+        lock(node.previous!, node, node.next!) { p, c, n in
             p.next = n
-            n?.previous = p
+            n.previous = p
         
-            node.previous = nil
-            node.next = nil
-            
-            if tail == node {
-                tail = p
-            }
+            c.previous = nil
+            c.next = nil
         }
     }
     
@@ -105,9 +85,8 @@ public final class AtomicLinkedList<Element> {
         }
         
         lock(head, tail) { h, t in
-            h.next = nil
-            t?.previous = nil
-            tail = h
+            h.next = t
+            t.previous = h
         }
     }
     

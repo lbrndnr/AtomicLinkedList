@@ -15,10 +15,10 @@ final class AtomicStack<Element> {
 //        node.previous = nil
         node.next = nil
         
-        lock(node, head) { n, h in
-            n.next = h
-            head = n
-        }
+//        lock(node, head) { n, h in
+//            n.next = h
+//            head = n
+//        }
     }
     
     func pop() -> Node<Element>? {
@@ -26,10 +26,10 @@ final class AtomicStack<Element> {
             return nil
         }
         
-        lock(node, node.next) { h, n in
-            h.next = nil
-            head = n
-        }
+//        lock(node, node.next) { h, n in
+//            h.next = nil
+//            head = n
+//        }
         
         return node
     }

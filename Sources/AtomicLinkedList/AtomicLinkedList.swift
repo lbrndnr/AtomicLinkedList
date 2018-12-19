@@ -10,44 +10,30 @@ public final class AtomicLinkedList<Element> {
 //    private let pool = AtomicStack<Element>()
     
     private let head = Node<Element>(element: nil)
-    private let tail = Node<Element>(element: nil)
     
     public var isEmpty: Bool {
-        return (head.next === tail)
+        return true
+//        return (head.next.load() === tail)
     }
     
-    // MARK: - Initialization
-    
-    public init() {
-        head.next = tail
-        tail.previous = head
-    }
-    
-    // MARK: - Insertion
-    
-    @discardableResult public func append(_ newElement: Element) -> Ticket {
+    public func append(_ newElement: Element) {
         let node = Node(element: newElement)
+        node.setNext(next: head.next, tag: 0)
         
-        lock(tail.previous!, tail) { p, n in
-            node.previous = p
-            node.next = n
-            
-            n.previous = node
-            p.next = node
-        }
+        while !head.CASNext(current: head.next, future: node, currentTag: 0, futureTag: 0) {}
         
-        let ticket = Ticket {
-            weak var weakSelf = self
-            weak var weakNode = node
-
-            guard let node = weakNode else {
-                return
-            }
-
-            weakSelf?.remove(node)
-        }
-        
-        return ticket
+        //        let ticket = Ticket {
+        //            weak var weakSelf = self
+        //            weak var weakNode = node
+        //
+        //            guard let node = weakNode else {
+        //                return
+        //            }
+        //
+        //            weakSelf?.remove(node)
+        //        }
+        //
+        //        return ticket
     }
     
     // MARK: - Removal
@@ -91,6 +77,38 @@ public final class AtomicLinkedList<Element> {
     }
     
 }
+
+//extension AtomicLinkedList where Element: Comparable {
+//
+//    // MARK: - Insertion
+//
+//    public func append(_ newElement: Element) {
+//        let node = Node(element: newElement)
+//        while !tail.nextCAS(current: tail.next, future: node, currentTag: 0, futureTag: 0) {}
+//
+//        //        lock(tail.previous!, tail) { p, n in
+//        //            node.previous = p
+//        //            node.next = n
+//        //
+//        //            n.previous = node
+//        //            p.next = node
+//        //        }
+//
+//        //        let ticket = Ticket {
+//        //            weak var weakSelf = self
+//        //            weak var weakNode = node
+//        //
+//        //            guard let node = weakNode else {
+//        //                return
+//        //            }
+//        //
+//        //            weakSelf?.remove(node)
+//        //        }
+//        //
+//        //        return ticket
+//    }
+//
+//}
 
 extension AtomicLinkedList: Sequence {
     

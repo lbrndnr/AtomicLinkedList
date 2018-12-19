@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/glessard/swift-atomics", from: "4.1.3"),
+        .package(url: "https://github.com/glessard/swift-atomics", from: "4.4.0-b1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.

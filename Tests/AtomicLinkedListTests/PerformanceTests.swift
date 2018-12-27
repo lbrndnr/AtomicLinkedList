@@ -25,7 +25,7 @@ class PerformanceTests: XCTestCase {
             
             let range = (0..<10000)
             let addOperations = range.map { i in BlockOperation { self.list.append(i) } }
-            let removeOperations = range.map { _ in BlockOperation { self.list.dropFirst() } }
+            let removeOperations = range.map { _ in BlockOperation { self.list.remove(at: 0) } }
             let operations = addOperations + removeOperations
             
             queue.addOperations(operations, waitUntilFinished: true)
@@ -44,7 +44,7 @@ class PerformanceTests: XCTestCase {
         
         let remove: (Int) -> () = { i in
             syncQueue.sync {
-                array.dropFirst()
+                array.remove(at: 0)
             }
         }
         

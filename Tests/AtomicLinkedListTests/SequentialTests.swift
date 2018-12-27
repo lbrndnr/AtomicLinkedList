@@ -8,7 +8,7 @@
 import XCTest
 @testable import AtomicLinkedList
 
-final class AtomicLinkedListTests: XCTestCase {
+final class SequentialTests: XCTestCase {
     
     var list = AtomicLinkedList<Int>()
     
@@ -55,45 +55,31 @@ final class AtomicLinkedListTests: XCTestCase {
     }
     
     func testRemoval() {
-        for i in 0..<10 {
+        let range = 0..<10
+        let allBut: ([Int]) -> ([Int]) = { ks in
+            return Array(range).filter { !ks.contains($0) }
+        }
+        
+        for i in range {
             list.append(i)
         }
         
         list.remove(5)
-        XCTAssertEqual(count(), 9)
+        XCTAssertEqual(Array(list), allBut([5]))
         
         list.remove(0)
-        XCTAssertEqual(count(), 8)
+        XCTAssertEqual(Array(list), allBut([5, 0]))
         
         list.remove(9)
-        XCTAssertEqual(count(), 7)
+        XCTAssertEqual(Array(list), allBut([5, 0, 9]))
+        
+        list.remove(at: 2)
+        XCTAssertEqual(Array(list), allBut([5, 0, 9, 3]))
+        
+        list.remove(at: 3)
+        XCTAssertEqual(Array(list), allBut([5, 0, 9, 3, 6]))
         
         list.removeAll()
-        XCTAssertTrue(list.isEmpty)
-    }
-    
-    func testTicket() {        
-        var tickets = [Ticket]()
-        for i in 0..<10 {
-            let t = list.append(i)
-            tickets.append(t)
-        }
-        XCTAssertFalse(list.isEmpty)
-        
-        tickets.shuffle()
-        
-        for (idx, t) in tickets.enumerated() {
-            list.remove(t)
-            XCTAssertEqual(count(), tickets.count-idx-1)
-        }
-        
-        tickets.shuffle()
-        
-        for t in tickets {
-            list.remove(t)
-            XCTAssertEqual(count(), 0)
-        }
-        
         XCTAssertTrue(list.isEmpty)
     }
     

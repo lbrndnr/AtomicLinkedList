@@ -14,16 +14,16 @@ public struct AtomicIterator<Element>: IteratorProtocol {
     }
     
     mutating public func next() -> Element? {
-        guard let currentNode = node else {
+        guard let current = node else {
             return nil
         }
         
-        currentNode.lock()
-        let nextNode = currentNode.next
-        currentNode.unlock()
+        node = current.next
+        if current.tag > 0 {
+            return next()
+        }
         
-        node = nextNode
-        return nextNode?.element
+        return node?.element
     }
     
 }

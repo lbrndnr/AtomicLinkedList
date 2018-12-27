@@ -13,7 +13,7 @@ final class AtomicStack<Element> {
     
     func push(_ node: Node<Element>) {
 //        node.previous = nil
-        node.next = nil
+//        node.next = nil
         
 //        lock(node, head) { n, h in
 //            n.next = h

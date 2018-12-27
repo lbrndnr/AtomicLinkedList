@@ -12,67 +12,85 @@ public final class AtomicLinkedList<Element> {
     private let head = Node<Element>(element: nil)
     
     public var isEmpty: Bool {
-        return true
-//        return (head.next.load() === tail)
+        return head.next == nil || head.tag > 0
     }
+    
+//    public func insert(_ newElement: Element, at index: Int) {
+//        var i = 0;
+//        var pred = head
+//        var curr = head.next
+//        while let node = curr, i < index  {
+//            pred = node
+//            curr = node.next
+//            i += 1
+//        }
+//
+//        let inserted  = insert(newElement, before: curr, after: pred)
+//        if !inserted {
+//            insert(newElement, at: index)
+//        }
+//    }
     
     public func append(_ newElement: Element) {
         let node = Node(element: newElement)
-        node.setNext(next: head.next, tag: 0)
+        var pred: Node<Element>
         
-        while !head.CASNext(current: head.next, future: node, currentTag: 0, futureTag: 0) {}
-        
-        //        let ticket = Ticket {
-        //            weak var weakSelf = self
-        //            weak var weakNode = node
-        //
-        //            guard let node = weakNode else {
-        //                return
-        //            }
-        //
-        //            weakSelf?.remove(node)
-        //        }
-        //
-        //        return ticket
+        repeat {
+            (_, pred) = iterate()
+            node.setNext(next: pred.next, tag: 0)
+        } while !pred.CASNext(current: (nil, 0), future: (node, 0))
     }
     
     // MARK: - Removal
     
-    private func remove(_ node: Node<Element>) {
-        lock(node.previous!, node, node.next!) { p, c, n in
-            p.next = n
-            n.previous = p
+    @discardableResult public func remove(at index: Int) -> Element? {
+        let (i, pred) = iterate { i,_ in i < index }
         
-            c.previous = nil
-            c.next = nil
+        if i == index {
+            var next: Node<Element>?
+            repeat {
+                next = pred.next
+            } while !pred.CASNext(current: (next, 0), future: (next, 1))
         }
-    }
-    
-    public func dropFirst() -> Element? {
-        guard let node = head.next else {
-            return nil
+        else {
+            assert(false)
         }
         
-        let element = node.element
-        remove(node)
-        
-        return element
-    }
-    
-    public func remove(_ ticket: Ticket) {
-        // TODO: check if the same list that issued the ticket
-        ticket.block?()
-        ticket.invalidate()
+        return nil
     }
     
     public func removeAll() {
-        guard !isEmpty else {
-            return
+        var next: Node<Element>?
+        repeat {
+            next = head.next
+            if next == nil {
+                return
+            }
+        }
+        while !head.CASNext(current: (next, 0), future: (next, 1))
+    }
+    
+    // MARK: -
+    
+    private func iterate(with condition: ((Int, Element?) -> (Bool))? = nil) -> (Int, Node<Element>) {
+        var i = 0
+        var node = head
+        removeNextIfTagged(of: node)
+        while let next = node.next, (condition?(i, next.element) ?? true) {
+            node = next
+            i += 1
+            removeNextIfTagged(of: node)
         }
         
-        lock(head, tail) { h, t in
-            h.next = t
-            t.previous = h
+        return (i, node)
+    }
+    
+    internal func removeNextIfTagged(of node: Node<Element>) {
+        while node.tag > 0 {
+            var next: Node<Element>?
+            repeat {
+                next = node.next
+            } while !node.CASNext(current: (next, 1), future: (next?.next, 0))
         }
     }
     
@@ -121,13 +139,16 @@ extension AtomicLinkedList: Sequence {
 extension AtomicLinkedList where Element: Equatable {
     
     public func remove(_ element: Element) {
-        var node = head
-        while node.element != element, let next = node.next {
-            node = next
-        }
+        let (_, pred) = iterate { $1 != element }
         
-        if node.element == element {
-            remove(node)
+        if pred.next?.element == element {
+            var next: Node<Element>?
+            repeat {
+                next = pred.next
+            } while !pred.CASNext(current: (next, 0), future: (next, 1))
+        }
+        else {
+            assert(false)
         }
     }
     

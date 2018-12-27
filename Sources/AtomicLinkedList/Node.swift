@@ -28,8 +28,8 @@ final class Node<Element> {
         atomicNext.swap(next, tag: tag)
     }
     
-    func CASNext(current: Node<Element>?, future: Node<Element>?, currentTag: Int, futureTag: Int) -> Bool {
-        return atomicNext.CAS(current: current, future: future, currentTag: currentTag, futureTag: futureTag)
+    @discardableResult func CASNext(current: (Node<Element>?, Int), future: (Node<Element>?, Int)) -> Bool {
+        return atomicNext.CAS(current: current, future: future)
     }
 
 }

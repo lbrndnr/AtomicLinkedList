@@ -15,6 +15,8 @@ public final class AtomicLinkedList<Element> {
         return head.next == nil || head.tag > 0
     }
     
+    public init() {}
+    
     public func append(_ newElement: Element) {
         let node = Node(element: newElement)
         var tail: Node<Element>

@@ -32,19 +32,20 @@ class ConcurrentTests: XCTestCase {
     // MARK: - Tests
     
     func testConcurrentAppending() {
-        let range = (0..<1000)
+        let n = 10_000
         
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 100
-        let operations = range.map { i in BlockOperation { self.list.append(i) } }
-                              .shuffled()
+        let operations = (0..<n).map { i in BlockOperation { self.list.append(i) } }
+                                .shuffled()
         queue.addOperations(operations, waitUntilFinished: true)
         
-        XCTAssertEqual(count(), 1000)
+        XCTAssertEqual(count(), n)
     }
     
     func testConcurrentRemoval() {
-        let range = (0..<1000)
+        let n = 10_000
+        let range = (0..<n)
         for i in range {
             list.append(i)
         }
@@ -57,7 +58,7 @@ class ConcurrentTests: XCTestCase {
                               .shuffled()
         queue.addOperations(operations, waitUntilFinished: true)
         
-        XCTAssertEqual(count(), 1000)
+        XCTAssertEqual(count(), 0)
     }
     
     func testThreadSafety() {
@@ -65,10 +66,19 @@ class ConcurrentTests: XCTestCase {
         queue.maxConcurrentOperationCount = 100
         
         let range = (0..<1000)
-        let addOperations = range.map { i in BlockOperation { self.list.append(i) } }
-        let removeOperations = range.map { i in BlockOperation { self.list.remove(at: 0) } }
-        let operations = (addOperations).shuffled()
+        let insertionOperations = range.map { (false, $0) }
+                                       .shuffled()
+        var logicalOperations = insertionOperations
+        for (idx, op) in insertionOperations.enumerated() {
+            logicalOperations.insert((true, op.1), at: min(logicalOperations.count-1, idx + 10))
+        }
         
+        let operations = logicalOperations.map { op -> BlockOperation in
+            if op.0 {
+                return BlockOperation { self.list.remove(op.1) }
+            }
+            return BlockOperation { self.list.append(op.1) }
+        }
         queue.addOperations(operations, waitUntilFinished: true)
         
         XCTAssertEqual(count(), 0)

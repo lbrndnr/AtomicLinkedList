@@ -34,10 +34,11 @@ class ConcurrentTests: XCTestCase {
     func testConcurrentAppending() {
         let n = 10_000
         
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 100
         let operations = (0..<n).map { i in BlockOperation { self.list.append(i) } }
                                 .shuffled()
+        
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 100
         queue.addOperations(operations, waitUntilFinished: true)
         
         XCTAssertEqual(count(), n)
@@ -49,47 +50,31 @@ class ConcurrentTests: XCTestCase {
         for i in range {
             list.append(i)
         }
-        
         XCTAssertEqual(Array(list), Array(range))
+        
+        let operations = range.map { i in BlockOperation { self.list.remove(i) } }
+                              .shuffled()
         
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 100
-        let operations = range.map { i in BlockOperation { self.list.remove(i) } }
-                              .shuffled()
         queue.addOperations(operations, waitUntilFinished: true)
         
         XCTAssertEqual(count(), 0)
     }
     
     func testConcurrentAccess() {
+        let n = 10_000
+        let range = (0..<n)
+        let operations = range.flatMap { i -> [BlockOperation] in
+            let append = BlockOperation { self.list.append(i) }
+            let remove = BlockOperation { self.list.remove(i) }
+            remove.addDependency(append)
+            
+            return [append, remove]
+        }.shuffled()
+        
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 100
-        
-        let range = (0..<1000)
-        let insertionOperations = range.map { (false, $0) }
-                                       .shuffled()
-        var logicalOperations = insertionOperations
-        for (idx, op) in insertionOperations.enumerated() {
-            logicalOperations.insert((true, op.1), at: min(logicalOperations.count, 2*idx + 10))
-        }
-        
-        // sanity check
-        var inserted = Set<Int>()
-        for (remove, idx) in logicalOperations {
-            if remove {
-                assert(inserted.contains(idx))
-            }
-            else {
-                inserted.insert(idx)
-            }
-        }
-        
-        let operations = logicalOperations.map { op -> BlockOperation in
-            if op.0 {
-                return BlockOperation { self.list.remove(op.1) }
-            }
-            return BlockOperation { self.list.append(op.1) }
-        }
         queue.addOperations(operations, waitUntilFinished: true)
         
         XCTAssertEqual(count(), 0)

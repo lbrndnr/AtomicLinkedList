@@ -1,2 +1,2 @@
-# AtomicLinkedList2
+# AtomicLinkedList
 A lock-free linked list

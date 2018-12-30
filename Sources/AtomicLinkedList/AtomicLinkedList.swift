@@ -40,6 +40,20 @@ public final class AtomicLinkedList<Element> {
         } while !tail.CASNext(current: (nil, .none), future: (node, .none))
     }
     
+    public func insert(_ newElement: Element, at index: Int) {
+        let node = Node(element: newElement)
+        var pred: Node<Element>
+        var iterator = AtomicIterator(head: head)
+        
+        repeat {
+            iterator.reset(head: head)
+            guard let (_, maybePred) = (iterator.find { i,_ in i == index-1 }) else {
+                assert(false)
+            }
+            pred = maybePred
+        } while !pred.CASNext(current: (nil, .none), future: (node, .none))
+    }
+    
     // MARK: - Removal
     
     @discardableResult public func remove(at index: Int) -> Element? {

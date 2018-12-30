@@ -16,8 +16,8 @@ public struct AtomicIterator<Element> {
     }
     
     fileprivate func removeIfTagged(_ node: Node<Element>, pred: Node<Element>) -> Bool {
-        while pred.tag == 0 && node.tag == 1 && pred.next === node {
-            if pred.CASNext(current: (node, 0), future: (node.next, 0)) {
+        while pred.tag == .none && node.tag == .removed && pred.next === node {
+            if pred.CASNext(current: (node, .none), future: (node.next, .none)) {
                 return true
             }
         }

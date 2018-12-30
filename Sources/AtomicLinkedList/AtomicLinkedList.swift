@@ -12,7 +12,7 @@ public final class AtomicLinkedList<Element> {
     private let head = Node<Element>(element: nil)
     
     public var isEmpty: Bool {
-        return head.next == nil || head.tag > 0
+        return head.next == nil || head.tag != .none
     }
     
     public init() {}
@@ -26,7 +26,7 @@ public final class AtomicLinkedList<Element> {
             iterator.reset(head: head)
             tail = iterator.findTail()
             node.setNext(next: nil, tag: 0)
-        } while !tail.CASNext(current: (nil, 0), future: (node, 0))
+        } while !tail.CASNext(current: (nil, .none), future: (node, .none))
     }
     
     // MARK: - Removal
@@ -38,7 +38,7 @@ public final class AtomicLinkedList<Element> {
             var next: Node<Element>?
             repeat {
                 next = node.next
-            } while !node.CASNext(current: (next, 0), future: (next, 1))
+            } while !node.CASNext(current: (next, .none), future: (next, .removed))
         }
         else {
             assert(false)
@@ -55,7 +55,7 @@ public final class AtomicLinkedList<Element> {
                 return
             }
         }
-        while !head.CASNext(current: (next, 0), future: (next, 1))
+        while !head.CASNext(current: (next, .none), future: (next, .removed))
     }
     
 }
@@ -76,7 +76,7 @@ extension AtomicLinkedList where Element: Equatable {
             iterator.reset(head: head)
             if let (_, node) = (iterator.find { $1 == element }) {
                 let next = node.next
-                if node.CASNext(current: (next, 0), future: (next, 1)) {
+                if node.CASNext(current: (next, .none), future: (next, .removed)) {
                     break
                 }
             }

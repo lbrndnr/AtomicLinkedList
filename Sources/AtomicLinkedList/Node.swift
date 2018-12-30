@@ -7,6 +7,12 @@
 
 import Atomics
 
+enum Tag: Int {
+    case none = 0
+    case removed = 1
+    case stacked = 2
+}
+
 final class Node<Element> {
     
     var element: Element?
@@ -16,8 +22,8 @@ final class Node<Element> {
         return atomicNext.load().ref
     }
     
-    var tag: Int {
-        return atomicNext.load().tag
+    var tag: Tag {
+        return Tag(rawValue: atomicNext.load().tag)!
     }
     
     init(element e: Element?) {
@@ -28,8 +34,8 @@ final class Node<Element> {
         atomicNext.swap(next, tag: tag)
     }
     
-    @discardableResult func CASNext(current: (Node<Element>?, Int), future: (Node<Element>?, Int)) -> Bool {
-        return atomicNext.CAS(current: current, future: future)
+    @discardableResult func CASNext(current: (Node<Element>?, Tag), future: (Node<Element>?, Tag)) -> Bool {
+        return atomicNext.CAS(current: (current.0, current.1.rawValue), future: (future.0, future.1.rawValue))
     }
 
 }

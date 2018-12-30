@@ -1,3 +1,2 @@
 # AtomicLinkedList
-
-A description of this package.
+A lock-free linked list

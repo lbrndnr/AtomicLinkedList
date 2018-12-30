@@ -61,7 +61,7 @@ class ConcurrentTests: XCTestCase {
         XCTAssertEqual(count(), 0)
     }
     
-    func testThreadSafety() {
+    func testConcurrentAccess() {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 100
         
@@ -70,7 +70,18 @@ class ConcurrentTests: XCTestCase {
                                        .shuffled()
         var logicalOperations = insertionOperations
         for (idx, op) in insertionOperations.enumerated() {
-            logicalOperations.insert((true, op.1), at: min(logicalOperations.count-1, idx + 10))
+            logicalOperations.insert((true, op.1), at: min(logicalOperations.count, 2*idx + 10))
+        }
+        
+        // sanity check
+        var inserted = Set<Int>()
+        for (remove, idx) in logicalOperations {
+            if remove {
+                assert(inserted.contains(idx))
+            }
+            else {
+                inserted.insert(idx)
+            }
         }
         
         let operations = logicalOperations.map { op -> BlockOperation in

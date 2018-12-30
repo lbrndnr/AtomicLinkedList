@@ -17,6 +17,18 @@ public final class AtomicLinkedList<Element> {
     
     public init() {}
     
+    // MARK: - Insertion
+    
+    public func prepend(_ newElement: Element) {
+        let node = Node(element: newElement)
+        var next: Node<Element>?
+        
+        repeat {
+            next = head.next
+            node.setNext(next: next, tag: .none)
+        } while !head.CASNext(current: (next, .none), future: (node, .none))
+    }
+    
     public func append(_ newElement: Element) {
         let node = Node(element: newElement)
         var tail: Node<Element>
@@ -25,7 +37,6 @@ public final class AtomicLinkedList<Element> {
         repeat {
             iterator.reset(head: head)
             tail = iterator.findTail()
-            node.setNext(next: nil, tag: 0)
         } while !tail.CASNext(current: (nil, .none), future: (node, .none))
     }
     

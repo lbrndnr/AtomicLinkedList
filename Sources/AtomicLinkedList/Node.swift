@@ -30,8 +30,8 @@ final class Node<Element> {
         element = e
     }
     
-    func setNext(next: Node<Element>?, tag: Int) {
-        atomicNext.swap(next, tag: tag)
+    func setNext(next: Node<Element>?, tag: Tag) {
+        atomicNext.swap(next, tag: tag.rawValue)
     }
     
     @discardableResult func CASNext(current: (Node<Element>?, Tag), future: (Node<Element>?, Tag)) -> Bool {

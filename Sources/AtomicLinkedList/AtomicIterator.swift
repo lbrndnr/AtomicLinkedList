@@ -10,7 +10,7 @@ public struct AtomicIterator<Element> {
     private var node: Node<Element>
     private var index: Int
     
-    init(head: Node<Element>, index idx: Int = 0) {
+    init(head: Node<Element>, index idx: Int = -1) {
         node = head
         index = idx
     }
@@ -40,7 +40,7 @@ public struct AtomicIterator<Element> {
         return nil
     }
     
-    mutating func reset(head: Node<Element>, index idx: Int = 0) {
+    mutating func reset(head: Node<Element>, index idx: Int = -1) {
         node = head
         index = idx
     }

@@ -9,27 +9,25 @@ import Foundation
 
 final class AtomicStack<Element> {
     
-    private var head: Node<Element>?
+    private var head = Node<Element>(element: nil)
     
     func push(_ node: Node<Element>) {
-//        node.previous = nil
-//        node.next = nil
+        var next: Node<Element>?
         
-//        lock(node, head) { n, h in
-//            n.next = h
-//            head = n
-//        }
+        repeat {
+            next = head.next
+            node.setNext(next: next, tag: .none)
+        } while !head.CASNext(current: (next, .none), future: (node, .none))
     }
     
     func pop() -> Node<Element>? {
-        guard let node = head else {
-            return nil
-        }
+        var node: Node<Element>?
+        var next: Node<Element>?
         
-//        lock(node, node.next) { h, n in
-//            h.next = nil
-//            head = n
-//        }
+        repeat {
+            node = head.next
+            next = node?.next
+        } while !head.CASNext(current: (node, .none), future: (next, .none))
         
         return node
     }

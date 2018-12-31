@@ -7,7 +7,7 @@
 
 public final class AtomicLinkedList<Element> {
     
-//    private let pool = AtomicStack<Element>()
+    private let pool = AtomicStack<Element>()
     
     private let head = Node<Element>(element: nil)
     
@@ -33,8 +33,17 @@ public final class AtomicLinkedList<Element> {
     
     // MARK: - Insertion
     
+    private func popNode(with element: Element) -> Node<Element> {
+        guard let node = pool.pop() else {
+            return Node(element: element)
+        }
+        
+        node.element = element
+        return node
+    }
+    
     public func prepend(_ newElement: Element) {
-        let node = Node(element: newElement)
+        let node = popNode(with: newElement)
         var next: Node<Element>?
         
         repeat {
@@ -44,7 +53,7 @@ public final class AtomicLinkedList<Element> {
     }
     
     public func append(_ newElement: Element) {
-        let node = Node(element: newElement)
+        let node = popNode(with: newElement)
         var tail: Node<Element>
         var iterator = AtomicIterator(head: head)
         
@@ -55,7 +64,7 @@ public final class AtomicLinkedList<Element> {
     }
     
     public func insert(_ newElement: Element, at index: Int) {
-        let node = Node(element: newElement)
+        let node = popNode(with: newElement)
         var pred: Node<Element>
         var next: Node<Element>?
         var iterator = AtomicIterator(head: head)

@@ -19,7 +19,7 @@ public final class AtomicLinkedList<Element> {
     
     public init() {}
     
-    public init(elements: AnySequence<Element>) {
+    public init<S>(_ elements: S) where S: Sequence, Element == S.Element {
         let next = elements.reversed()
                            .reduce(nil as Node<Element>?) { n, e in
             let node = Node(element: e)

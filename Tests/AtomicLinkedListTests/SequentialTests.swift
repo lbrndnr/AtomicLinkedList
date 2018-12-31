@@ -31,6 +31,12 @@ final class SequentialTests: XCTestCase {
     
     // MARK: - Tests
     
+    func testInitialization() {
+        let ks = [1, 2, 3]
+        list = AtomicLinkedList(ks)
+        XCTAssertEqual(Array(list), ks)
+    }
+    
     func testEmptiness() {
         XCTAssertTrue(list.isEmpty)
         

@@ -24,7 +24,7 @@ For now, `AtomicLinkedList` also implements a subscript method to read individua
 print(list[1]) // prints 1
 ```
 
-As the entire class is thread safe, reading and writing to the list can be done from multiple threads.
+Since the entire class is thread safe, reading and writing to the list can be done from multiple threads.
 
 ## Dependencies
 `AtomicLinkedList` is written in Swift and links against [Atomics](https://github.com/glessard/swift-atomics). 

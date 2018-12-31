@@ -29,19 +29,47 @@ class ConcurrentTests: XCTestCase {
         return count
     }
     
+    private func performConcurrently(_ operations: [BlockOperation]) {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 100
+        queue.addOperations(operations, waitUntilFinished: true)
+    }
+    
     // MARK: - Tests
     
+    func testConcurrentPrepending() {
+        let n = 10_000
+        
+        let operations = (0..<n).map { i in BlockOperation { self.list.prepend(i) } }
+        performConcurrently(operations)
+        
+        XCTAssertEqual(count(), n)
+    }
+
     func testConcurrentAppending() {
         let n = 10_000
         
         let operations = (0..<n).map { i in BlockOperation { self.list.append(i) } }
-                                .shuffled()
-        
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 100
-        queue.addOperations(operations, waitUntilFinished: true)
+        performConcurrently(operations)
         
         XCTAssertEqual(count(), n)
+    }
+    
+    func testConcurrentInsertion() {
+        let n = 10_000
+        let range = (0..<1000)
+        for i in range {
+            list.append(i)
+        }
+        XCTAssertEqual(Array(list), Array(range))
+        
+        let operations = (0..<n).map { i in BlockOperation {
+            let idx = (i == 0) ? 0 : Int.random(in: 0 ..< 1000)
+            self.list.insert(i, at: idx)
+        }}
+        performConcurrently(operations)
+        
+        XCTAssertEqual(count(), n + 1000)
     }
     
     func testConcurrentRemoval() {
@@ -54,10 +82,7 @@ class ConcurrentTests: XCTestCase {
         
         let operations = range.map { i in BlockOperation { self.list.remove(i) } }
                               .shuffled()
-        
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 100
-        queue.addOperations(operations, waitUntilFinished: true)
+        performConcurrently(operations)
         
         XCTAssertEqual(count(), 0)
     }
@@ -65,6 +90,7 @@ class ConcurrentTests: XCTestCase {
     func testConcurrentAccess() {
         let n = 10_000
         let range = (0..<n)
+        
         let operations = range.flatMap { i -> [BlockOperation] in
             let append = BlockOperation { self.list.append(i) }
             let remove = BlockOperation { self.list.remove(i) }
@@ -72,10 +98,7 @@ class ConcurrentTests: XCTestCase {
             
             return [append, remove]
         }.shuffled()
-        
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 100
-        queue.addOperations(operations, waitUntilFinished: true)
+        performConcurrently(operations)
         
         XCTAssertEqual(count(), 0)
     }

@@ -43,6 +43,7 @@ public final class AtomicLinkedList<Element> {
     public func insert(_ newElement: Element, at index: Int) {
         let node = Node(element: newElement)
         var pred: Node<Element>
+        var next: Node<Element>?
         var iterator = AtomicIterator(head: head)
         
         repeat {
@@ -51,7 +52,9 @@ public final class AtomicLinkedList<Element> {
                 assert(false)
             }
             pred = maybePred
-        } while !pred.CASNext(current: (nil, .none), future: (node, .none))
+            next = pred.next
+            node.setNext(next: next, tag: .none)
+        } while !pred.CASNext(current: (next, .none), future: (node, .none))
     }
     
     // MARK: - Removal

@@ -30,9 +30,13 @@ public struct AtomicIterator<Element> {
         return node
     }
     
-    mutating func find(with condition: ((Int, Element?) -> (Bool))?) -> (Int, Node<Element>)? {
+    mutating func find(with condition: ((Int, Element?) -> (Bool))) -> (Int, Node<Element>)? {
+        if condition(index, node.element) {
+            return (index, node)
+        }
+        
         while let node = nextNode() {
-            if let condition = condition, condition(index, node.element) {
+            if condition(index, node.element) {
                 return (index, node)
             }
         }

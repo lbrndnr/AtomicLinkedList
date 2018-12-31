@@ -165,3 +165,11 @@ extension AtomicLinkedList where Element: Equatable {
     }
     
 }
+
+extension AtomicLinkedList: CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        return Array(self).debugDescription
+    }
+    
+}

@@ -110,6 +110,30 @@ extension AtomicLinkedList: Sequence {
     
 }
 
+extension AtomicLinkedList: Collection {
+    
+    public var startIndex: Int {
+        return 0
+    }
+    
+    public var endIndex: Int {
+        return count-1
+    }
+    
+    public func index(after i: Int) -> Int {
+        return i+1
+    }
+    
+    public subscript(position: Int) -> Element {
+        var iterator = makeIterator()
+        guard let (_, node) = (iterator.find { i,_ in i == position }) else {
+            preconditionFailure()
+        }
+        return node.element!
+    }
+    
+}
+
 extension AtomicLinkedList where Element: Equatable {
     
     public func remove(_ element: Element) {

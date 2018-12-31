@@ -25,9 +25,9 @@ public struct AtomicIterator<Element> {
         return false
     }
     
-    mutating func findTail() -> Node<Element> {
+    mutating func findTail() -> (Int, Node<Element>) {
         while nextNode() != nil {}
-        return node
+        return (index, node)
     }
     
     mutating func find(with condition: ((Int, Element?) -> (Bool))) -> (Int, Node<Element>)? {

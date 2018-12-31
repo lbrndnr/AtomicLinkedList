@@ -50,7 +50,7 @@ public final class AtomicLinkedList<Element> {
         
         repeat {
             iterator.reset(head: head)
-            tail = iterator.findTail()
+            (_, tail) = iterator.findTail()
         } while !tail.CASNext(current: (nil, .none), future: (node, .none))
     }
     
@@ -100,29 +100,7 @@ public final class AtomicLinkedList<Element> {
         while !head.CASNext(current: (next, .none), future: (next, .removed))
     }
     
-}
-
-extension AtomicLinkedList: Sequence {
-    
-    public func makeIterator() -> AtomicIterator<Element> {
-        return AtomicIterator(head: head)
-    }
-    
-}
-
-extension AtomicLinkedList: Collection {
-    
-    public var startIndex: Int {
-        return 0
-    }
-    
-    public var endIndex: Int {
-        return count-1
-    }
-    
-    public func index(after i: Int) -> Int {
-        return i+1
-    }
+    // MARK: - Reading
     
     public subscript(position: Int) -> Element {
         var iterator = makeIterator()
@@ -133,6 +111,40 @@ extension AtomicLinkedList: Collection {
     }
     
 }
+
+extension AtomicLinkedList: Sequence {
+    
+    public func makeIterator() -> AtomicIterator<Element> {
+        return AtomicIterator(head: head)
+    }
+    
+}
+
+//extension AtomicLinkedList: Collection {
+//    
+//    public var startIndex: Int {
+//        return 0
+//    }
+//    
+//    public var endIndex: Int {
+//        var iterator = makeIterator()
+//        let (idx, _) = iterator.findTail()
+//        return index(after: idx)
+//    }
+//    
+//    public func index(after i: Int) -> Int {
+//        return i+1
+//    }
+//    
+//    public subscript(position: Int) -> Element {
+//        var iterator = makeIterator()
+//        guard let (_, node) = (iterator.find { i,_ in i == position }) else {
+//            preconditionFailure()
+//        }
+//        return node.element!
+//    }
+//
+//}
 
 extension AtomicLinkedList where Element: Equatable {
     

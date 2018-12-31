@@ -46,7 +46,7 @@ final class SequentialTests: XCTestCase {
     }
     
     func testInsertion() {
-        let insertions: [Int] = Array(0 ..< 10)
+        let insertions = Array(0 ..< 10)
         
         for i in insertions {
             list.append(i)
@@ -87,6 +87,19 @@ final class SequentialTests: XCTestCase {
         
         list.removeAll()
         XCTAssertTrue(list.isEmpty)
+    }
+    
+    func testSubscribtAccess() {
+        let insertions = Array(0 ..< 10)
+        
+        for i in insertions {
+            list.append(i)
+        }
+        
+        for (idx, i) in insertions.enumerated() {
+            XCTAssertEqual(list[idx], i)
+        }
+        
     }
     
 }

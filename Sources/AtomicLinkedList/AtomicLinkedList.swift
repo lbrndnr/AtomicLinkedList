@@ -63,7 +63,7 @@ public final class AtomicLinkedList<Element> {
         repeat {
             iterator.reset(head: head)
             guard let (_, maybePred) = (iterator.find { i,_ in i == index-1 }) else {
-                assert(false)
+                preconditionFailure()
             }
             pred = maybePred
             next = pred.next
@@ -83,7 +83,7 @@ public final class AtomicLinkedList<Element> {
             } while !node.CASNext(current: (next, .none), future: (next, .removed))
         }
         else {
-            assert(false)
+            preconditionFailure()
         }
         
         return nil
@@ -159,7 +159,7 @@ extension AtomicLinkedList where Element: Equatable {
                 }
             }
             else {
-                assert(false, "Could not find \(element)")
+                preconditionFailure()
             }
         }
     }

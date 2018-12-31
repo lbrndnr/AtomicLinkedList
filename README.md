@@ -4,7 +4,7 @@
 [![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/lbrndnr/AtomicLinkedList/blob/master/LICENSE)
 
 ## About
-This is an implementation of a lock-free singly linked list. It's fully thread-safe without relying on conventional locks. If used correctly, this makes it more performant and scale better. 
+This is an implementation of a lock-free singly linked list. It's fully thread-safe without relying on conventional locks. If used correctly, this makes it more performant and scale better. Moreover, the lack of locks makes it impossible to end up in a dead lock.
 ⚠️Note that this library is still WIP⚠️
 
 ## Usage
@@ -23,6 +23,8 @@ For now, `AtomicLinkedList` also implements a subscript method to read individua
 ```swift
 print(list[1]) // prints 1
 ```
+
+As the entire class is thread safe, reading and writing to the list can be done from multiple threads.
 
 ## Dependencies
 `AtomicLinkedList` is written in Swift and links against [Atomics](https://github.com/glessard/swift-atomics). 

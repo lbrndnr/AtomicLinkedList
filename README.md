@@ -7,6 +7,23 @@
 This is an implementation of a lock-free singly linked list. It's fully thread-safe without relying on conventional locks. If used correctly, this makes it more performant and scale better. 
 ⚠️Note that this library is still WIP⚠️
 
+## Usage
+`AtomicLinkedList` can be used liked one would expect from a linked list. It currently conforms only to `Sequence` though, `Collection` will come once it's efficient enough.
+The class provides multiple methods to modify its elements:
+```swift
+let list = AtomicLinkedList([1, 2, 3])
+list.insert(10, at: 2)
+list.append(4)
+list.prepend(0)
+list.remove(10) // or list.remove(at: 3)
+print(list) // prints [0, 1, 2, 3, 4]
+```
+
+For now, `AtomicLinkedList` also implements a subscript method to read individual elements just like in a `Collection`:
+```swift
+print(list[1]) // prints 1
+```
+
 ## Dependencies
 `AtomicLinkedList` is written in Swift and links against [Atomics](https://github.com/glessard/swift-atomics). 
 

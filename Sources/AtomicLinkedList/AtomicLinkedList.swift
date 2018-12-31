@@ -15,7 +15,21 @@ public final class AtomicLinkedList<Element> {
         return head.next == nil || head.tag != .none
     }
     
+    // MARK: - Initialization
+    
     public init() {}
+    
+    public init(elements: AnySequence<Element>) {
+        let next = elements.reversed()
+                           .reduce(nil as Node<Element>?) { n, e in
+            let node = Node(element: e)
+            node.setNext(next: n, tag: .none)
+                 
+            return node
+        }
+        
+        head.setNext(next: next, tag: .none)
+    }
     
     // MARK: - Insertion
     

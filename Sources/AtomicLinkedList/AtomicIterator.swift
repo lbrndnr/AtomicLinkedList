@@ -46,7 +46,7 @@ private func nextNode<E>(of node: Node<E>) -> Node<E>? {
     return nil
 }
 
-func findTail<E>(from head: Node<E>, index: Int = -1) -> (Int, Node<E>) {
+func findTail<E>(from head: Node<E>, index: Int) -> (Int, Node<E>) {
     var idx = index
     var node = head
     
@@ -58,7 +58,7 @@ func findTail<E>(from head: Node<E>, index: Int = -1) -> (Int, Node<E>) {
     return (idx, node)
 }
 
-func findNode<E>(from head: Node<E>, with condition: ((Int, E?) -> (Bool)), index: Int = -1) -> (Int, Node<E>)? {
+func findNode<E>(from head: Node<E>, with index: Int, condition: ((Int, E?) -> (Bool))) -> (Int, Node<E>)? {
     guard !condition(index, head.element) else {
         return (index, head)
     }

@@ -90,14 +90,7 @@ public final class AtomicLinkedList<Element> {
     }
     
     public func removeAll() {
-        var next: Node<Element>?
-        repeat {
-            next = head.next
-            if next == nil {
-                return
-            }
-        }
-        while !head.CASNext(current: (next, .none), future: (next, .removed))
+        head.setNext(next: nil, tag: .none)
     }
     
     // MARK: - Reading

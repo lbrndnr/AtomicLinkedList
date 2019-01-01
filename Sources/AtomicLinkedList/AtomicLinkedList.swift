@@ -114,23 +114,27 @@ public final class AtomicLinkedList<Element> {
         
         return tail
     }
-
-    private func getTail() -> Node<Element> {
-        var currentTail = getTailEstimation()
-        let (idx, node) = findTail(from: currentTail.ref!, index: currentTail.tag)
-        
-        while node.tag == .none && (idx > currentTail.tag || currentTail.ref!.tag == .removed) {
-            if estimatedTail.CAS(current: currentTail, future: (node, idx)) {
+    
+    private func updateTailEstimation(to node: Node<Element>, at index: Int) {
+        var currentTail = estimatedTail.load()
+        while node.tag == .none && (index > currentTail.tag || currentTail.ref!.tag == .removed) {
+            if estimatedTail.CAS(current: currentTail, future: (node, index)) {
                 break
             }
             currentTail = estimatedTail.load()
         }
+    }
+
+    private func getTail() -> Node<Element> {
+        let currentTail = getTailEstimation()
+        let (idx, node) = findTail(from: currentTail.ref!, index: currentTail.tag)
+        updateTailEstimation(to: node, at: idx)
         
         return node
     }
     
     private func getNode(at position: Int) -> Node<Element>? {
-        let currentTail = estimatedTail.load()
+        let currentTail = getTailEstimation()
         let start: Node<Element>
         let idx: Int
         
@@ -150,12 +154,7 @@ public final class AtomicLinkedList<Element> {
         let res = findNode(from: head, with: index, condition: condition)
         
         if let (idx, node) = res, update {
-            let currentTail = estimatedTail.load()
-            while node.tag == .none && idx > currentTail.tag {
-                if estimatedTail.CAS(current: currentTail, future: (node, idx)) {
-                    break
-                }
-            }
+            updateTailEstimation(to: node, at: idx)
         }
         
         return res?.1

@@ -21,7 +21,7 @@ public final class AtomicLinkedList<Element> {
     // MARK: - Initialization
     
     public init() {
-        estimatedTail = AtomicTaggedReference(head, tag: 0)
+        estimatedTail = AtomicTaggedReference(head, tag: -1)
     }
     
     public convenience init<S>(_ elements: S) where S: Sequence, Element == S.Element {

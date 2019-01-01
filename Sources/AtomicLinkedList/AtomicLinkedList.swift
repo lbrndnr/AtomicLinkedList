@@ -46,11 +46,9 @@ public final class AtomicLinkedList<Element> {
     public func append(_ newElement: Element) {
         let node = Node(element: newElement)
         var tail: Node<Element>
-        var iterator = AtomicIterator(head: head)
         
         repeat {
-            iterator.reset(head: head)
-            (_, tail) = iterator.findTail()
+            (_, tail) = findTail(from: head)
         } while !tail.CASNext(current: (nil, .none), future: (node, .none))
     }
     
@@ -58,11 +56,9 @@ public final class AtomicLinkedList<Element> {
         let node = Node(element: newElement)
         var pred: Node<Element>
         var next: Node<Element>?
-        var iterator = AtomicIterator(head: head)
         
         repeat {
-            iterator.reset(head: head)
-            guard let (_, maybePred) = (iterator.find { i,_ in i == index-1 }) else {
+            guard let (_, maybePred) = findNode(from: head, with: { i,_ in i == index-1 }) else {
                 preconditionFailure()
             }
             pred = maybePred
@@ -74,9 +70,7 @@ public final class AtomicLinkedList<Element> {
     // MARK: - Removal
     
     @discardableResult public func remove(at index: Int) -> Element? {
-        var iterator = AtomicIterator(head: head)
-        
-        if let (_, node) = (iterator.find { i,_ in i == index }) {
+        if let (_, node) = findNode(from: head, with: { i,_ in i == index }) {
             var next: Node<Element>?
             repeat {
                 next = node.next
@@ -96,8 +90,7 @@ public final class AtomicLinkedList<Element> {
     // MARK: - Reading
     
     public subscript(position: Int) -> Element {
-        var iterator = makeIterator()
-        guard let (_, node) = (iterator.find { i,_ in i == position }) else {
+        guard let (_, node) = findNode(from: head, with: { i,_ in i == position }) else {
             preconditionFailure()
         }
         return node.element!
@@ -142,10 +135,8 @@ extension AtomicLinkedList: Sequence {
 extension AtomicLinkedList where Element: Equatable {
     
     public func remove(_ element: Element) {
-        var iterator = AtomicIterator(head: head)
         while true {
-            iterator.reset(head: head)
-            if let (_, node) = (iterator.find { $1 == element }) {
+            if let (_, node) = findNode(from: head, with: { $1 == element }) {
                 let next = node.next
                 if node.CASNext(current: (next, .none), future: (next, .removed)) {
                     break

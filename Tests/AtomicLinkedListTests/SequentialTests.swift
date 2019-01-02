@@ -96,8 +96,8 @@ final class SequentialTests: XCTestCase {
             list.append(i)
         }
         
-        for (idx, i) in insertions.enumerated() {
-            XCTAssertEqual(list[idx], i)
+        for i in insertions {
+            XCTAssertEqual(list[i], i)
         }
         
     }

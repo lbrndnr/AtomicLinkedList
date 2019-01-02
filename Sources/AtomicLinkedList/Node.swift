@@ -10,7 +10,6 @@ import Atomics
 enum Tag: Int {
     case none = 0
     case removed = 1
-    case stacked = 2
 }
 
 final class Node<Element> {

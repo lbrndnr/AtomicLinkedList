@@ -5,70 +5,74 @@
 //  Created by Laurin Brandner on 23.10.18.
 //
 
-public struct AtomicIterator<Element> {
+public struct AtomicIterator<Element>: IteratorProtocol {
     
     private var node: Node<Element>
-    private var index: Int
     
-    init(head: Node<Element>, index idx: Int = -1) {
+    init(head: Node<Element>) {
         node = head
-        index = idx
     }
     
-    fileprivate func removeIfTagged(_ node: Node<Element>, pred: Node<Element>) -> Bool {
-        while pred.tag == .none && node.tag == .removed && pred.next === node {
-            if pred.CASNext(current: (node, .none), future: (node.next, .none)) {
-                return true
-            }
+    public mutating func next() -> Element? {
+        guard let next = nextNode(of: node) else {
+            return nil
         }
         
-        return false
-    }
-    
-    mutating func findTail() -> (Int, Node<Element>) {
-        while nextNode() != nil {}
-        return (index, node)
-    }
-    
-    mutating func find(with condition: ((Int, Element?) -> (Bool))) -> (Int, Node<Element>)? {
-        if condition(index, node.element) {
-            return (index, node)
-        }
-        
-        while let node = nextNode() {
-            if condition(index, node.element) {
-                return (index, node)
-            }
-        }
-        
-        return nil
-    }
-    
-    mutating func reset(head: Node<Element>, index idx: Int = -1) {
-        node = head
-        index = idx
+        node = next
+        return node.element
     }
     
 }
 
-extension AtomicIterator: IteratorProtocol {
-    
-    public mutating func next() -> Element? {
-        return nextNode()?.element
+private func removeIfTagged<E>(_ node: Node<E>, pred: Node<E>) -> Bool {
+    while pred.tag == .none && node.tag == .removed && pred.next === node {
+        if pred.CASNext(current: (node, .none), future: (node.next, .none)) {
+            return true
+        }
     }
     
-    private mutating func nextNode() -> Node<Element>? {
-        if let next = node.next {
-            if removeIfTagged(next, pred: node) {
-                return nextNode()
-            }
-            
-            index += 1
-            node = next
-            return node
+    return false
+}
+
+private func nextNode<E>(of node: Node<E>) -> Node<E>? {
+    if let next = node.next {
+        if removeIfTagged(next, pred: node) {
+            return nextNode(of: node)
         }
         
-        return nil
+        return next
     }
     
+    return nil
+}
+
+func findTail<E>(from head: Node<E>, index: Int) -> (Int, Node<E>) {
+    var idx = index
+    var node = head
+    
+    while let next = nextNode(of: node) {
+        node = next
+        idx += 1
+    }
+    
+    return (idx, node)
+}
+
+func findNode<E>(from head: Node<E>, with index: Int, condition: ((Int, E?) -> (Bool))) -> (Int, Node<E>)? {
+    guard !condition(index, head.element) else {
+        return (index, head)
+    }
+    
+    var idx = index
+    var node = head
+    
+    while let next = nextNode(of: node) {
+        idx += 1
+        node = next
+        if condition(idx, node.element) {
+            return (idx, node)
+        }
+    }
+    
+    return nil
 }

@@ -44,7 +44,7 @@ class PerformanceTests: XCTestCase {
     func testListPerformance() {
         let list = AtomicLinkedList<Int>()
         let insert: Function = list.append
-        let remove: Function = { list.remove(at: $0)}
+        let remove: Function = { list.remove($0)}
         let contains: Function = { _ = list.contains($0)}
         
         measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 5_000), threads: 16)
@@ -62,7 +62,7 @@ class PerformanceTests: XCTestCase {
         
         let remove: Function = { i in
             syncQueue.sync {
-                array.remove(at: i)
+                array.removeAll { $0 == i }
             }
         }
         

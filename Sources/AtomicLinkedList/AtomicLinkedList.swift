@@ -199,16 +199,14 @@ extension AtomicLinkedList: Sequence {
 extension AtomicLinkedList where Element: Equatable {
     
     public func remove(_ element: Element) {
-        while true {
-            if let node = traverse(from: head, until: { $1 == element }, updateTailEstimation: false) {
-                let next = node.next
-                if node.CASNext(current: (next, .none), future: (next, .removed)) {
-                    break
-                }
-            }
-            else {
-                preconditionFailure()
-            }
+        if let node = traverse(from: head, until: { $1 == element }, updateTailEstimation: false) {
+            var next: Node<Element>?
+            repeat {
+                next = node.next
+            } while !node.CASNext(current: (next, .none), future: (next, .removed))
+        }
+        else {
+            preconditionFailure()
         }
     }
     

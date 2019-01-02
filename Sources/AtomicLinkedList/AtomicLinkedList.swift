@@ -84,7 +84,7 @@ public final class AtomicLinkedList<Element> {
             } while !node.CASNext(current: (next, .none), future: (next, .removed))
         }
         else {
-            preconditionFailure()
+//            preconditionFailure()
         }
         
         return nil

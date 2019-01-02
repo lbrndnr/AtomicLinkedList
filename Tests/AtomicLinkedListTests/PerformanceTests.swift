@@ -10,8 +10,6 @@ import XCTest
 
 @available(OSX 10.12, *)
 class PerformanceTests: XCTestCase {
-    
-    // MARK: -
 
     typealias Function = (Int) -> ()
     typealias Operation = (fn: Function, n: Int)
@@ -25,21 +23,23 @@ class PerformanceTests: XCTestCase {
             let operations = (insertions + removals + contains).shuffled()
             
             let semaphore = DispatchSemaphore(value: threads)
+            let group = DispatchGroup()
             
+            startMeasuring()
             for op in operations {
+                semaphore.wait()
+                group.enter()
                 Thread.detachNewThread {
                     op.0(op.1)
                     semaphore.signal()
+                    group.leave()
                 }
             }
             
-            startMeasuring()
-            semaphore.wait()
+            group.wait()
             stopMeasuring()
         }
     }
-    
-    // MARK: - Tests
 
     func testListPerformance() {
         let list = AtomicLinkedList<Int>()
@@ -47,7 +47,7 @@ class PerformanceTests: XCTestCase {
         let remove: Function = { list.remove($0)}
         let contains: Function = { _ = list.contains($0)}
         
-        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 5_000), threads: 16)
+        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), threads: 32)
     }
     
     func testBaseline() {
@@ -72,7 +72,7 @@ class PerformanceTests: XCTestCase {
             }
         }
         
-        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 5_000), threads: 16)
+        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), threads: 32)
     }
 
 }

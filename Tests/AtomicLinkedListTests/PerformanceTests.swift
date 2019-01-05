@@ -8,7 +8,6 @@
 import XCTest
 @testable import AtomicLinkedList
 
-@available(OSX 10.12, *)
 class PerformanceTests: XCTestCase {
 
     typealias Function = (Int) -> ()
@@ -20,17 +19,18 @@ class PerformanceTests: XCTestCase {
             let insertions = (0..<insert.n).map { (insert.fn, $0) }
             let removals = (0..<remove.n).map { (remove.fn, $0) }
             let contains = (0..<contains.n).map { (contains.fn, $0) }
-            let operations = (insertions + contains).shuffled()
+            let operations = (insertions + removals + contains).shuffled()
             
             let semaphore = DispatchSemaphore(value: threads)
             let group = DispatchGroup()
+            let queue = DispatchQueue(label: "operations", attributes: .concurrent)
             clear()
             
             startMeasuring()
             for op in operations {
                 semaphore.wait()
                 group.enter()
-                Thread.detachNewThread {
+                queue.async {
                     op.0(op.1)
                     semaphore.signal()
                     group.leave()

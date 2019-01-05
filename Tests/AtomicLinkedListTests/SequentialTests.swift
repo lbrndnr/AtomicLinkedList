@@ -8,7 +8,7 @@
 import XCTest
 @testable import AtomicLinkedList
 
-final class SequentialTests: XCTestCase {
+class SequentialTests: XCTestCase {
     
     var list = AtomicLinkedList<Int>()
     

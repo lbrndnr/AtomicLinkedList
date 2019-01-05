@@ -5,11 +5,14 @@
 //  Created by Laurin Brandner on 23.10.18.
 //
 
+import Foundation
 import Atomics
 
 public final class AtomicLinkedList<Element> {
     
 //    private let pool = AtomicStack<Element>()
+    
+    private let removalQueue = DispatchQueue(label: "ch.laurinbrandner.AtomicLinkedList.removalQueue", attributes: .concurrent)
     
     private let head = Node<Element>(element: nil)
     private var estimatedTail: AtomicTaggedReference<Node<Element>>
@@ -127,7 +130,7 @@ public final class AtomicLinkedList<Element> {
 
     private func getTail() -> Node<Element> {
         let currentTail = getTailEstimation()
-        let (idx, node) = findTail(from: currentTail.ref!, index: currentTail.tag)
+        let (idx, node) = findTail(from: currentTail.ref!, index: currentTail.tag, removalQueue: removalQueue)
         updateTailEstimation(to: node, at: idx)
         
         return node
@@ -151,7 +154,7 @@ public final class AtomicLinkedList<Element> {
     }
     
     private func traverse(from head: Node<Element>, until condition: ((Int, Element?) -> (Bool)), with index: Int = -1, updateTailEstimation update: Bool = true) -> Node<Element>? {
-        let res = findNode(from: head, with: index, condition: condition)
+        let res = findNode(from: head, with: index, condition: condition, removalQueue: removalQueue)
         
         if let (idx, node) = res, update {
             updateTailEstimation(to: node, at: idx)
@@ -165,7 +168,7 @@ public final class AtomicLinkedList<Element> {
 extension AtomicLinkedList: Sequence {
     
     public func makeIterator() -> AtomicIterator<Element> {
-        return AtomicIterator(head: head)
+        return AtomicIterator(head: head, removalQueue: removalQueue)
     }
     
 }

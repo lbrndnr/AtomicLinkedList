@@ -13,17 +13,18 @@ class PerformanceTests: XCTestCase {
 
     typealias Function = (Int) -> ()
     typealias Operation = (fn: Function, n: Int)
-    private func measure(insert: Operation, remove: Operation, contains: Operation, threads: Int) {
+    private func measure(insert: Operation, remove: Operation, contains: Operation, clear: (() -> ()), threads: Int) {
         precondition(remove.n <= insert.n)
         
         measureMetrics(PerformanceTests.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
             let insertions = (0..<insert.n).map { (insert.fn, $0) }
             let removals = (0..<remove.n).map { (remove.fn, $0) }
             let contains = (0..<contains.n).map { (contains.fn, $0) }
-            let operations = (insertions + removals + contains).shuffled()
+            let operations = (insertions + contains).shuffled()
             
             let semaphore = DispatchSemaphore(value: threads)
             let group = DispatchGroup()
+            clear()
             
             startMeasuring()
             for op in operations {
@@ -43,11 +44,12 @@ class PerformanceTests: XCTestCase {
 
     func testListPerformance() {
         let list = AtomicLinkedList<Int>()
-        let insert: Function = list.append
-        let remove: Function = { list.remove($0)}
+        let insert: Function = list.prepend
+        let remove: Function = { list.remove($0) }
         let contains: Function = { _ = list.contains($0)}
+        let clear = { print(Array(list).count) }
         
-        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), threads: 32)
+        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), clear: clear, threads: 32)
     }
     
     func testBaseline() {
@@ -62,7 +64,13 @@ class PerformanceTests: XCTestCase {
         
         let remove: Function = { i in
             syncQueue.sync {
-                array.removeAll { $0 == i }
+                for (idx, j) in array.enumerated() {
+                    if i == j {
+                        array.remove(at: idx)
+                        return
+                    }
+                }
+//                array.removeAll { $0 == i }
             }
         }
         
@@ -72,7 +80,9 @@ class PerformanceTests: XCTestCase {
             }
         }
         
-        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), threads: 32)
+        let clear = { print(array.count) }
+        
+        measure(insert: (insert, 1_000), remove: (remove, 1_000), contains: (contains, 10_000), clear: clear, threads: 32)
     }
 
 }
